@@ -1,0 +1,56 @@
+
+pin green C5;
+pin red C6;
+
+pin whitebutton B28 pulldown;
+pin greenbutton B27 pulldown;
+pin startbutton B24 pulldown;
+
+
+// seven segment displays
+
+// p1
+
+// selector for player 1
+pin p1_sel[0] C43;  //12
+pin p1_sel[1] C42;  //9
+
+// main pins for player 1
+pin p1_seg[0] A39;   //1
+pin p1_seg[1] A40;
+pin p1_seg[2] A12;  //4
+pin p1_seg[3] A11;  //5
+pin p1_seg[4] A42;   //6
+pin p1_seg[5] A43;   //9
+pin p1_seg[6] A9;  //10
+pin p1_seg[7] A8;
+// p2
+
+// selector for player 2
+pin p2_sel[0] C8;  //12
+pin p2_sel[1] C9;  //9
+
+// main pins for player 2
+pin p2_seg[0] A30;   //1 none correctly labelled atm
+pin p2_seg[1] A23; 
+pin p2_seg[2] A24;  //3
+pin p2_seg[3] A28;  //4
+pin p2_seg[4] A27;   //5
+pin p2_seg[5] A31;   //6
+pin p2_seg[6] A21;  //9
+pin p2_seg[7] A20;
+
+//selector for rounds
+pin rounds_sel[0] C46;  //12
+pin rounds_sel[1] C45;  //9
+
+//main pins for rounds
+pin rounds_seg[0] A33;   //1
+pin rounds_seg[1] A34;
+pin rounds_seg[2] A18;   //3
+pin rounds_seg[3] A17;  //4
+pin rounds_seg[4] A36;  //5
+pin rounds_seg[5] A37;   //6
+pin rounds_seg[6] A15;   //9
+pin rounds_seg[7] A14;
+

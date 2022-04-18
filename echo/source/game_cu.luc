@@ -1,0 +1,855 @@
+module game_cu (
+    input clk,  // clock
+    input rst,  // reset_conditioner
+    
+    
+    input greenbutton,
+    input whitebutton,
+    input startbutton,
+    input isP1,
+    input tempvar1[16],
+    input tempvar2[16],
+    input tempvar3,
+    input p1Score[16],
+    input p2Score[16],
+    input rounds[16],
+    input winner,
+    
+    
+    
+    
+    
+    //just the regular leds
+    output green,
+    output red,
+    
+    //the control signals here
+    output we,
+    output ra[4],
+    output rb[4],
+    output rc[4],
+    output asel[2],
+    output bsel[3],
+    output wdsel[2],
+    output alufn[6],
+    
+    //the segmented displays here
+    output p1_seg[8],
+    output p1_sel[2],
+    
+    output p2_seg[8],
+    output p2_sel[2],
+    
+    output rounds_seg[8],
+    output rounds_sel[2]    
+    
+    
+    
+  ) {  
+  
+  
+  
+  .clk(clk) {
+  
+ 
+  fsm game_fsm = {
+    //INITIALIZATION STATES
+    IDLE_INIT,
+    START,
+    SEVENTEEN,
+    P1_INIT_SEQUENCE,
+    P2_INIT_SEQUENCE,
+    SEQUENCE_COUNT_INIT,
+    ROUNDS_INIT,
+    P1SCORE_INIT,
+    P2SCORE_INIT,
+    TEMPVAR1_INIT,
+    TEMPVAR2_INIT,
+    TEMPVAR3_INIT,
+    WINNER_INIT,
+    ISP1_INIT,
+    IDLE,
+    
+      
+    //USER INPUT STATES (LOOPS HERE)        
+    
+    //PLAYER 1 SEQUENCES      
+    PLAYER1_PRESS,
+    P1_INIT_LOOPVAR,
+    P1_LOOPVAR_COMPARE,
+    P1_BUTTONPRESS_CHECK,  
+    P1_BUTTONPRESS,
+    P1_SET_ADDVALUE,
+    P1_INCREMENT_LOOPVAR,
+    P1_WRITE_ADDVALUE,
+      
+    PLAYER2_PRESS,
+    P2_INIT_LOOPVAR,
+    P2_LOOPVAR_COMPARE,
+    P2_BUTTONPRESS_CHECK,  
+    P2_BUTTONPRESS,
+    P2_SET_ADDVALUE,
+    P2_INCREMENT_LOOPVAR,
+    P2_WRITE_ADDVALUE,
+      
+      
+    COMPARE_SEQUENCECOUNT_ONE,
+    SEQUENCE_COUNT_INCREMENT,
+    COMPARE_SEQUENCECOUNT_ONE_CHECK,
+    NOT_ISP1_SEQUENCECOUNT_1,
+    
+    
+      
+    SEVENTEEN_SUBTRACT,  
+    COMPARE_SEQUENCES_COPY1, 
+    COMPARE_SEQUENCES_SHIFT1,
+    COMPARE_SEQUENCES_COPY2,
+    COMPARE_SEQUENCES_SHIFT2,
+    COMPARE_SEQUENCES,
+    COMPARE_SEQUENCES_CHECK,
+    CHECK_ISP1,
+      
+    COMPARE_SEQUENCE16,
+    COMPARE_SEQUENCE16_CHECK,
+    NOT_ISP1_16, 
+    SEQUENCE_COUNT_INCREMENT_NOTISP1,
+    NOT_ISP1_ROUND,
+    INIT_SEQCOUNT_ROUND,
+      
+    ROUND_INCREMENT,
+    ISP1,
+    INCREMENT_P2_SCORE_16,
+    INCREMENT_P1_SCORE_16,
+    COMPARE_ROUNDS,
+    INCREMENT_P1_SCORE,
+    INCREMENT_P2_SCORE,
+    
+    COMPARE_ROUND5,
+    COMPARE_ROUND5_CHECK,
+    COMPARE_SCORES_LEQ,
+    COMPARE_SCORES_LEQ_CHECK,
+    COMPARE_SCORES_EQ,
+    COMPARE_SCORES_EQ_CHECK,
+      
+    P1_WINNER,
+    TIE,
+    P2_WINNER,
+    
+    END  
+  };
+    .rst(rst){
+      multi_seven_seg seg1;
+      multi_seven_seg seg2;
+      multi_seven_seg seg3;
+   
+    }
+}
+  
+
+  
+  
+  always {
+    
+    //********************************************************************************************************
+    //********************************************************************************************************
+    //these are the default initializations
+    alufn = b111111; // CHANGE
+    asel = b00;
+    bsel = b000;
+    we = b0;
+    ra = b0000;
+    rb = b0000;
+    rc = b0000;
+    green = b0; 
+    red = b0;
+    wdsel = b00;
+
+    
+    seg1.values[1] = 4h0;
+    seg1.values[0] = p1Score;
+    p1_seg = seg1.seg;
+    p1_sel = seg1.sel;
+    
+    seg2.values[1] = 4h0;
+    seg2.values[0] = p2Score;
+    p2_seg = seg2.seg;
+    p2_sel = seg2.sel;
+    
+    seg3.values[1] = 4h0;
+    seg3.values[0] = rounds;
+    rounds_seg = seg3.seg;
+    rounds_sel = seg3.sel;
+    
+    
+ 
+    
+    if (rst)
+    {
+       
+       game_fsm.d = game_fsm.START;
+   }
+    
+    
+    else{
+    
+    case(game_fsm.q){
+    
+      game_fsm.IDLE_INIT:
+        red = 1b1;
+        green = 1b1;
+          
+      
+  
+        game_fsm.d = game_fsm.START;
+       
+    
+      game_fsm.START:      // sets isP1 to 1
+        alufn = 6b010100;  // y = 1
+        asel = 2b00;       // out a
+        bsel = 3b010;      // isP1 = 1
+        rc = 4b0110;       // writing into isP1
+        we = 1b1;  
+        game_fsm.d = game_fsm.SEVENTEEN;
+        
+      
+        
+      game_fsm.SEVENTEEN:
+        alufn = 6b010100;  // y = 17
+        asel = 2b00;       // out a
+        bsel = 3b101;      // seventeen = 17 
+        rc = 4b1100;       // writing into seventeen
+        we = 1b1;  
+        game_fsm.d = game_fsm.P1_INIT_SEQUENCE;
+        
+      
+      game_fsm.P1_INIT_SEQUENCE:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b001;      // p1seq = 16b0
+        rc = 4b0000;       // writing into p1seq
+        we = 1b1;  
+        game_fsm.d = game_fsm.P2_INIT_SEQUENCE;
+      
+      game_fsm.P2_INIT_SEQUENCE:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b001;      // p2seq = 16b0
+        rc = 4b0001;       // writing into p2_seq
+        we = 1b1;  
+        game_fsm.d = game_fsm.SEQUENCE_COUNT_INIT;
+      
+      game_fsm.SEQUENCE_COUNT_INIT:
+        alufn = 6b010100;  // y = 1
+        asel = 2b00;       // out a
+        bsel = 3b010;      // sequenceCount = 1 
+        rc = 4b0010;       // writing into sequenceCount
+        we = 1b1;  
+        game_fsm.d = game_fsm.ROUNDS_INIT;
+        
+        
+      game_fsm.ROUNDS_INIT:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b001;      // 0
+        rc = 4b0101;       // rounds
+        we = 1b1;
+        game_fsm.d = game_fsm.P1SCORE_INIT;
+        
+      
+      game_fsm.P1SCORE_INIT:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b001;      // 0
+        rc = 4b0011;       // p1score
+        we = 1b1;
+        game_fsm.d = game_fsm.P2SCORE_INIT;
+      
+      game_fsm.P2SCORE_INIT:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b001;      // 0
+        rc = 4b0100;       // p2score
+        we = 1b1;
+        game_fsm.d = game_fsm.TEMPVAR1_INIT; 
+        
+        
+      game_fsm.TEMPVAR1_INIT:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b001;      // 0
+        rc = 4b0111;       // tempvar1
+        we = 1b1;
+        game_fsm.d = game_fsm.TEMPVAR2_INIT;
+        
+        
+      game_fsm.TEMPVAR2_INIT:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b001;      // 0
+        rc = 4b1000;       // tempvar2
+        we = 1b1;
+        game_fsm.d = game_fsm.TEMPVAR3_INIT;
+      
+      game_fsm.TEMPVAR3_INIT:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b001;      // 0
+        rc = 4b1110;       // tempvar3
+        we = 1b1;
+        game_fsm.d = game_fsm.WINNER_INIT;
+
+      game_fsm.WINNER_INIT:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b001;      // 0
+        rc = 4b1010;       // winner 
+        we = 1b1;
+        game_fsm.d = game_fsm.ISP1_INIT;
+          
+      game_fsm.ISP1_INIT:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b010;      // 1
+        rc = 4b0110;       // winner 
+        we = 1b1;
+        game_fsm.d = game_fsm.IDLE;
+      
+         
+      game_fsm.IDLE:
+        if (isP1){
+          game_fsm.d = game_fsm.P1_INIT_LOOPVAR;
+          }
+        else{
+          game_fsm.d = game_fsm.P2_INIT_LOOPVAR;
+          }
+         
+        
+      game_fsm.P1_INIT_LOOPVAR:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b001;      // loopvar = 0
+        rc = 4b1011;       // writing into loopvar
+        we = 1b1;  
+        game_fsm.d = game_fsm.P1_LOOPVAR_COMPARE;
+
+      
+      game_fsm.P1_LOOPVAR_COMPARE:
+        alufn = 6b110010;  // CMPLE (loopvar < sequenceCount)
+        asel = 2b00;       // out a
+        bsel = 3b000;      // out b
+        ra = 4b1011;       // loopvar
+        rb = 4b0010;       // sequenceCount
+        rc = 4b0111;       // writing into tempvar1
+        we = 1b1;  
+        game_fsm.d = game_fsm.P1_BUTTONPRESS_CHECK;
+
+        
+      game_fsm.P1_BUTTONPRESS_CHECK:
+        if (tempvar1)
+          {
+            game_fsm.d = game_fsm.P1_BUTTONPRESS;
+          }
+        else
+        {
+            game_fsm.d = game_fsm.COMPARE_SEQUENCECOUNT_ONE; 
+        }
+        
+      game_fsm.P1_BUTTONPRESS:
+        
+        green = 1b1;
+        red = 1b0;
+        
+        if (whitebutton)
+        {
+           game_fsm.d = game_fsm.P1_INCREMENT_LOOPVAR;
+        }
+        else if (greenbutton)
+        {
+           game_fsm.d = game_fsm.P1_SET_ADDVALUE;
+        }
+        else if (tempvar3)
+        {
+
+          game_fsm.d = game_fsm.P1_BUTTONPRESS;
+        }
+        else
+        {
+         //red = 1b1;
+         //green = 1b0;
+          
+          game_fsm.d = game_fsm.P1_BUTTONPRESS;
+        }
+        
+      
+      game_fsm.P1_SET_ADDVALUE:
+        alufn = 6b010011;  // x
+        asel = 2b01;
+        bsel = 3b000;
+        rc = 4b1001;
+        we = 1b1;
+        game_fsm.d = game_fsm.P1_WRITE_ADDVALUE;
+      
+      game_fsm.P1_WRITE_ADDVALUE:
+        alufn = 6b000000;  // ADD
+        asel = 2b00;       // out a
+        bsel = 3b000;      // out b
+        ra = 4b0000;       // p1seq
+        rb = 4b1001;       // addvalue
+        rc = 4b0000;       // writing into p1seq
+        we = 1b1;  
+        game_fsm.d = game_fsm.P1_INCREMENT_LOOPVAR;
+        
+      game_fsm.P1_INCREMENT_LOOPVAR:
+        alufn = 6b000000;  // ADD
+        asel = 2b00;       // out a
+        bsel = 3b010;      // SEXT(1)
+        ra = 4b1011;       // loopvar
+        rc = 4b1011;       // writing into loopvar
+        we = 1b1;  
+        game_fsm.d = game_fsm.P1_LOOPVAR_COMPARE;
+      
+        
+      game_fsm.P2_INIT_LOOPVAR:
+        alufn = 6b010100;  // y = 0
+        asel = 2b00;       // out a
+        bsel = 3b001;      // loopvar = 0
+        rc = 4b1011;       // writing into loopvar
+        we = 1b1;  
+        game_fsm.d = game_fsm.P2_LOOPVAR_COMPARE;
+
+      
+      game_fsm.P2_LOOPVAR_COMPARE:
+        alufn = 6b110010;  // CMPLE (loopvar < sequenceCount)
+        asel = 2b00;       // out a
+        bsel = 3b000;      // out b 
+        ra = 4b1011;       // loopvar
+        rb = 4b0010;       // sequenceCount
+        rc = 4b0111;       // writing into tempvar1
+        we = 1b1;  
+        game_fsm.d = game_fsm.P2_BUTTONPRESS_CHECK;
+
+        
+      game_fsm.P2_BUTTONPRESS_CHECK:
+        if (tempvar1)
+          {
+            game_fsm.d = game_fsm.P2_BUTTONPRESS;
+          }
+        else
+        {
+            game_fsm.d = game_fsm.COMPARE_SEQUENCECOUNT_ONE; 
+        }
+        
+      game_fsm.P2_BUTTONPRESS:
+          
+        green = 1b0;
+        red = 1b1;
+      
+        if (whitebutton)
+        {
+           game_fsm.d = game_fsm.P2_INCREMENT_LOOPVAR;
+        }
+        else if (greenbutton)
+        {
+           game_fsm.d = game_fsm.P2_SET_ADDVALUE;
+        }
+        else if (tempvar3)
+        {
+          //green = 1b1;
+          //red = 1b0;
+          game_fsm.d = game_fsm.P2_BUTTONPRESS;
+        }
+        else
+        {
+          //green = 1b0;
+          //red = 1b1;
+          game_fsm.d = game_fsm.P2_BUTTONPRESS;
+        }
+        
+      
+      game_fsm.P2_SET_ADDVALUE:
+        alufn = 6b010011;  // x
+        asel = 2b01;       //add value
+        bsel = 3b000;      //rb
+        rc = 4b1001;       //addvalue
+        we = 1b1;            
+        game_fsm.d = game_fsm.P2_WRITE_ADDVALUE;
+      
+      game_fsm.P2_WRITE_ADDVALUE:
+        alufn = 6b000000;  // ADD
+        asel = 2b00;       // out a
+        bsel = 3b000;      // out b
+        ra = 4b0001;       // p2seq
+        rb = 4b1001;       // addvalue
+        rc = 4b0001;       // writing into p2seq
+        we = 1b1;  
+        game_fsm.d = game_fsm.P2_INCREMENT_LOOPVAR;
+        
+      game_fsm.P2_INCREMENT_LOOPVAR:
+        alufn = 6b000000;  // ADD
+        asel = 2b00;       // out a
+        bsel = 3b010;      // SEXT(1)
+        ra = 4b1011;       // loopvar
+        rc = 4b1011;       // writing into loopvar
+        we = 1b1;  
+        game_fsm.d = game_fsm.P2_LOOPVAR_COMPARE;
+     
+        
+        
+      game_fsm.COMPARE_SEQUENCECOUNT_ONE:
+        alufn = 6b110011;  // CMPLEQ (sequenceCount <= 1 )
+        asel = 2b00;       // out a
+        bsel = 3b010;      // SEXT(1)
+        ra = 4b0010;       // sequenceCount
+        rc = 4b1000;       // writing into tempvar2
+        we = 1b1;  
+        game_fsm.d = game_fsm.COMPARE_SEQUENCECOUNT_ONE_CHECK;
+     
+        
+      game_fsm.COMPARE_SEQUENCECOUNT_ONE_CHECK: // CHECK EQUAL TO ONE
+        if (tempvar2)
+        {
+          game_fsm.d = game_fsm.NOT_ISP1_SEQUENCECOUNT_1;
+        }
+        else
+        {
+          game_fsm.d = game_fsm.SEVENTEEN_SUBTRACT;
+        }
+        
+        
+      game_fsm.NOT_ISP1_SEQUENCECOUNT_1:
+        alufn = 6b011011;  // NOT X
+        asel = 2b00;       // out a
+        bsel = 3b000;      // not needed, but we send in out b
+        ra = 4b0110;       // isP1
+        rc = 4b0110;       // writing into isP1
+        we = 1b1;
+        game_fsm.d = game_fsm.SEQUENCE_COUNT_INCREMENT; 
+        
+      game_fsm.SEQUENCE_COUNT_INCREMENT:
+        alufn = 6b000000;  // ADD
+        asel = 2b00;       // out a
+        bsel = 3b010;      // SEXT(1)
+        ra = 4b0010;       // sequenceCount
+        rc = 4b0010;       // writing into sequenceCount
+        we = 1b1;  
+        game_fsm.d = game_fsm.IDLE;
+        
+        
+      game_fsm.SEVENTEEN_SUBTRACT:
+        alufn = 6b000001;  // 17 - sequenceCount
+        asel = 2b00;       // out a
+        bsel = 3b000;      // out b
+        ra = 4b1100;       // seventeen
+        rb = 4b0010;       // sequenceCount
+        rc = 4b1101;       // writing into seventeen subtract
+        we = 1b1;  
+        game_fsm.d = game_fsm.COMPARE_SEQUENCES_COPY1;
+     
+        
+      game_fsm.COMPARE_SEQUENCES_COPY1:
+        alufn = 6b010011;  // x
+        asel = 2b00;       // out a
+        bsel = 3b000;      // not needed here, out b
+        ra = 4b0000;       // p1seq
+        rc = 4b0111;       // tempvar1
+        we = 1;
+        game_fsm.d = game_fsm.COMPARE_SEQUENCES_SHIFT1;
+        
+      game_fsm.COMPARE_SEQUENCES_SHIFT1:
+        alufn = 6b100000;  // shift left
+        asel = 2b00;       // out a 
+        bsel = 3b000;      // out b 
+        ra = 4b0111;       // tempvar1
+        rb = 4b1101;       // seventeen subtract
+        rc = 4b0111;       // storing into tempvar1
+        we = 1;            
+        game_fsm.d = game_fsm.COMPARE_SEQUENCES_COPY2;
+          
+      game_fsm.COMPARE_SEQUENCES_COPY2:
+        alufn = 6b010011;  // x
+        asel = 2b00;       // out a
+        bsel = 3b000;      // not needed here, out b
+        ra = 4b0001;       // p2seq
+        rc = 4b1000;       // tempvar2
+        we = 1;
+        game_fsm.d = game_fsm.COMPARE_SEQUENCES_SHIFT2;
+        
+      game_fsm.COMPARE_SEQUENCES_SHIFT2:
+        alufn = 6b100000;  // shift left
+        asel = 2b00;       // out a 
+        bsel = 3b000;      // out b 
+        ra = 4b1000;       // tempvar2
+        rb = 4b1101;       // seventeen subtract
+        rc = 4b1000;       // storing into tempvar2
+        we = 1b1;            
+        game_fsm.d = game_fsm.COMPARE_SEQUENCES;
+        
+      game_fsm.COMPARE_SEQUENCES:
+        alufn = 6b110001;  // CMPEQ
+        asel = 2b00;       // out a 
+        bsel = 3b000;      // out b
+        ra = 4b0111;       // tempvar1
+        rb = 4b1000;       // tempvar2
+        rc = 4b1110;       // tempvar3
+        we = 1b1;
+        game_fsm.d = game_fsm.COMPARE_SEQUENCES_CHECK;
+      
+      game_fsm.COMPARE_SEQUENCES_CHECK:
+        if(tempvar3)
+        {
+          game_fsm.d = game_fsm.COMPARE_SEQUENCE16;
+        }
+        else
+        {
+           game_fsm.d = game_fsm.ISP1;
+        }
+         
+      game_fsm.COMPARE_SEQUENCE16:
+        alufn = 6b110010;   // CMPLE
+        asel = 2b00;        // out a
+        bsel = 3b100;       // SEXT(16)
+        ra = 4b0010;        // sequenceCount
+        rc = 4b0111;        // tempvar1
+        we = 1b1;
+        game_fsm.d = game_fsm.COMPARE_SEQUENCE16_CHECK;
+      
+        
+      game_fsm.COMPARE_SEQUENCE16_CHECK:
+        if (tempvar1)
+        {
+           game_fsm.d = game_fsm.NOT_ISP1_16;
+        }
+        else
+        {
+           game_fsm.d = game_fsm.INCREMENT_P1_SCORE_16; 
+        }
+        
+      game_fsm.NOT_ISP1_16:
+        alufn = 6b011011;  // not x
+        asel = 2b00;       // out a
+        bsel = 3b000;      // not needed, out b
+        ra = 4b0110;       // isP1
+        rc = 4b0110;       // store it back into isP1 
+        we = 1b1;    
+        game_fsm.d = game_fsm.SEQUENCE_COUNT_INCREMENT_NOTISP1;
+          
+          
+          
+      game_fsm.SEQUENCE_COUNT_INCREMENT_NOTISP1:
+        
+        alufn = 6b000000;  // ADD
+        asel = 2b00;       // out a
+        bsel = 3b010;      // SEXT(1)
+        ra = 4b0010;       // sequenceCount
+        rc = 4b0010;       // writing into sequenceCount
+        we = 1b1;  
+        game_fsm.d = game_fsm.IDLE;
+         
+      
+      game_fsm.INCREMENT_P1_SCORE_16:
+        alufn = 6b000000;  // addc
+        asel = 2b00;       //out a
+        bsel = 3b010;      // 1
+        ra = 4b0011;       // p1score
+        rc = 4b0011;       // p1score
+        we = 1b1;
+        game_fsm.d = game_fsm.INCREMENT_P2_SCORE_16;
+      
+      game_fsm.INCREMENT_P2_SCORE_16:
+        alufn = 6b000000;  // addc
+        asel = 2b00;       //out a
+        bsel = 3b010;      // 1
+        ra = 4b0100;       // p2core
+        rc = 4b0100;       // p2core
+        we = 1b1;
+        game_fsm.d = game_fsm.ROUND_INCREMENT;
+      
+      game_fsm.ISP1:
+        alufn = 6b110001;  // CMPEQ
+        asel = 2b00;       // out a 
+        bsel = 3b010;      // 1
+        ra = 4b0110;       // isP1
+        rc = 4b1000;       // tempvar2
+        we = 1b1;
+        game_fsm.d = game_fsm.CHECK_ISP1;
+        
+      game_fsm.CHECK_ISP1:
+        if(tempvar2)
+        {
+          game_fsm.d = game_fsm.INCREMENT_P2_SCORE;
+        }
+        else
+        {
+          game_fsm.d = game_fsm.INCREMENT_P1_SCORE;
+
+        }
+        
+      game_fsm.INCREMENT_P2_SCORE:
+        alufn = 6b000000;  // addc
+        asel = 2b00;       // out a
+        bsel = 3b010;      // 1
+        ra = 4b0100;       // p2score
+        rc = 4b0100;       // p2score
+        we = 1b1;
+        game_fsm.d = game_fsm.ROUND_INCREMENT;
+      
+      game_fsm.INCREMENT_P1_SCORE:
+        alufn = 6b000000;  // addc
+        asel = 2b00;       // out a
+        bsel = 3b010;      // 1
+        ra = 4b0011;       // p1score
+        rc = 4b0011;       // p1score
+        we = 1b1;
+        game_fsm.d = game_fsm.ROUND_INCREMENT;
+        
+        
+      game_fsm.ROUND_INCREMENT:
+        alufn = 6b000000;  // addc
+        asel = 2b00;       // out a
+        bsel = 3b010;      // 1
+        ra = 4b0101;       // round
+        rc = 4b0101;       // round
+        we = 1b1;
+        game_fsm.d = game_fsm.COMPARE_ROUND5;
+      
+        
+      game_fsm.COMPARE_ROUND5:
+        alufn = 6b110010;  // CMPLE
+        asel = 2b00;       // out a 
+        bsel = 3b011;      // 5
+        ra = 4b0101;       // round
+        rc = 4b0111;       // tempvar1
+        we = 1b1;
+        game_fsm.d = game_fsm.COMPARE_ROUND5_CHECK;
+        
+       
+      game_fsm.COMPARE_ROUND5_CHECK:
+        if(tempvar1)
+        {
+          game_fsm.d = game_fsm.NOT_ISP1_ROUND;
+        }
+        else
+        {
+          game_fsm.d = game_fsm.COMPARE_SCORES_LEQ;// compare less than equal to
+        }
+        
+          
+      game_fsm.NOT_ISP1_ROUND: 
+        
+        alufn = 6b011011;  // not x
+        asel = 2b00;       // out a
+        bsel = 3b000;      // not needed, out b
+        ra = 4b0110;       // isP1
+        rc = 4b0110;       // store it back into isP1 
+        we = 1b1; 
+          
+        game_fsm.d = game_fsm.INIT_SEQCOUNT_ROUND;
+          
+      game_fsm.INIT_SEQCOUNT_ROUND:
+        alufn = 6b010100;  // y = 1
+        asel = 2b00;       // out a
+        bsel = 3b010;      // sequenceCount = 1 
+        rc = 4b0010;       // writing into sequenceCount
+        we = 1b1;  
+        game_fsm.d = game_fsm.IDLE;
+        
+        
+          
+        
+      game_fsm.COMPARE_SCORES_LEQ:
+        alufn = 6b110011; // CMPLEQ
+        asel = 2b00;      // out a 
+        bsel = 3b000;     // out b
+        ra = 4b0011;      // p1score 
+        rb = 4b0100;      // p2score
+        rc = 4b1000;      // tempvar2
+        we = 1b1;
+        game_fsm.d = game_fsm.COMPARE_SCORES_LEQ_CHECK;
+      
+      game_fsm.COMPARE_SCORES_LEQ_CHECK:
+        if(tempvar2)
+        {
+           game_fsm.d = game_fsm.COMPARE_SCORES_EQ;
+        }
+        else
+        {
+          game_fsm.d = game_fsm.P1_WINNER;
+        }
+        
+      game_fsm.COMPARE_SCORES_EQ:
+        alufn = 6b110001; // CMPLEQ
+        asel = 2b00;      // out a 
+        bsel = 3b000;     // out b
+        ra = 4b0011;      // p1score 
+        rb = 4b0100;      // p2score
+        rc = 4b0111;      // tempvar1
+        we = 1b1;
+        game_fsm.d = game_fsm.COMPARE_SCORES_EQ_CHECK;
+        
+      game_fsm.COMPARE_SCORES_EQ_CHECK:
+        if(tempvar1)
+        {
+          game_fsm.d = game_fsm.TIE;
+        }
+        else
+        {
+          game_fsm.d = game_fsm.P2_WINNER;
+        }
+        
+      game_fsm.P1_WINNER:
+        alufn = 6b010100;  // y
+        asel = 2b00;
+        bsel = 3b001;      // 0
+        rc = 4b0111;       // tempvar1
+        we = 1b1;
+        game_fsm.d = game_fsm.END;
+      
+       
+      game_fsm.P2_WINNER:
+        alufn = 6b010100;  // y
+        asel = 2b00;
+        bsel = 3b010;      // 1
+        rc = 4b0111;       // tempvar1
+        we = 1b1;
+        game_fsm.d = game_fsm.END;
+        
+      game_fsm.TIE:
+        alufn = 6b010100;  // y
+        asel = 2b00;
+        bsel = 3b010;      // 1
+        rc = 4b1010;       // winner
+        we = 1b1;
+        game_fsm.d = game_fsm.END;
+        
+      game_fsm.END:
+        if(winner)
+        {
+          //green = 1b1;
+         // red = 1b1;
+          game_fsm.d = game_fsm.START;
+        }
+        else if(tempvar1)
+        {
+          //green = 1b1;
+          //red = 1b0;
+          game_fsm.d = game_fsm.START;
+        }
+        else if(startbutton)
+        {
+          game_fsm.d = game_fsm.START;
+        }
+        else 
+        {
+         
+            
+          game_fsm.d = game_fsm.START;
+        }
+          
+      default: 
+        game_fsm.d = game_fsm.START;
+           
+    }
+    
+  }
+  }
+}

@@ -1,0 +1,43 @@
+module arith_16 (
+    input x[16], 
+    input y[16], 
+    input arithAlufn[2],
+               
+    output arithOut[16], 
+    output z,
+    output v,
+    output n
+    
+  ) {
+
+  sig temp[16]; 
+  sig xb[16];
+  
+  always {
+  case(arithAlufn){
+          
+      b00:                                    // ADD
+        temp = $signed(x) + $signed(y);
+        xb = y;
+        v = ((x[15] & y[15] & (~temp[15])) | ((~x[15]) & (~y[15]) & temp[15]));
+        
+      b01:                                    // SUBTRACT
+        temp = $signed(x) - $signed(y);
+        xb = 0 - y;   
+        v = ((x[15] & xb[15] & (~temp[15])) | ((~x[15]) & (~xb[15]) & temp[15]));
+        
+      b10:                                    // MULTIPLY
+        temp = x * y;  
+        v = b0; 
+        
+      default: 
+        temp = 16b0; 
+        v = b0;     
+      }
+    
+    n = temp[15]; 
+    z = ~|temp; 
+    
+    arithOut = temp;
+  }
+}

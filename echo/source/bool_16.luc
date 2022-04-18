@@ -1,0 +1,46 @@
+module bool_16 (
+    input x[16],
+    input y[16],
+    input boolAlufn[4],
+    output boolOut[16]
+    
+  ) {
+
+  sig temp[16];
+  
+  always {
+    case(boolAlufn){
+      b0000:                    // OR - bitwise
+        temp = x | y;
+      
+      b0001:                    // AND - bitwise
+        temp = x & y;
+      
+      b0010:                    // XOR - bitwise
+        temp = x ^ y;
+      
+      b0011:                    // "X" 
+        temp = x; 
+      
+      b0100:                    // "Y" 
+        temp = y;
+      
+      b1000:                    // NOR - bitwise
+        temp = ~ (x | y);
+      
+      b1001:                    // NAND - bitwise
+        temp = ~ (x & y);
+      
+      b1011:                    // NOT X
+        temp = ~ x;
+      
+      b1100:                    // NOT Y
+        temp = ~ y;              
+      
+      default:      
+        temp = 16b0; 
+    }
+    
+    boolOut = temp;
+  }
+}

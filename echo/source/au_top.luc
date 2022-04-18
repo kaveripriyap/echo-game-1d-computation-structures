@@ -1,0 +1,113 @@
+module au_top (
+    input clk,              // 100MHz clock
+    input rst_n,            // reset button (active low)
+    output led [8],         // 8 user controllable LEDs
+    input usb_rx,           // USB->Serial input
+    output usb_tx,          // USB->Serial output
+    input greenbutton,
+    input whitebutton,
+    input startbutton,
+    output green,
+    output red,
+    output p1_seg[8],
+    output p2_seg[8],
+    output p1_sel[2],
+    output p2_sel[2],
+    output rounds_seg[8],
+    output rounds_sel[2]
+  ) {
+  
+  sig rst;                  // reset signal
+ 
+
+  
+ 
+    // The reset conditioner is used to synchronize the reset signal to the FPGA
+    // clock. This ensures the entire FPGA comes out of reset at the same time.
+    reset_conditioner reset_cond(.clk(clk));
+    
+    button_conditioner start_cond(.clk(clk));
+    edge_detector edge_startbutton(#RISE(1), #FALL(0), .clk(clk));
+    
+    
+    button_conditioner greencond(.clk(clk));
+    edge_detector edge_greenbutton(#RISE(1), #FALL(0), .clk(clk));
+    
+    button_conditioner whitecond(.clk(clk));
+    edge_detector edge_whitebutton(#RISE(1), #FALL(0), .clk(clk));
+    
+    
+    
+    edge_detector  slowClockEdge(#RISE(1), #FALL(0), .clk(clk));
+   
+      
+      //counter ctr(#SIZE(3), #DIV(25));
+    counter slowClock(#SIZE(1), #DIV(28), .clk(clk), .rst(rst));
+   
+     game_miniBeta game_beta(.clk(clk), .rst(rst));
+  
+  
+  always {
+    
+    reset_cond.in = ~ rst_n;
+    rst = reset_cond.out; 
+    
+     slowClockEdge.in = slowClock.value;
+    
+    
+    start_cond.in = startbutton; // input raw inverted reset signal
+    edge_startbutton.in = start_cond.out;   // conditioned reset
+    game_beta.startbutton = edge_startbutton.out;
+    
+    
+    greencond.in = greenbutton; // input raw inverted reset signal
+    edge_greenbutton.in = greencond.out;   // conditioned reset
+    game_beta.greenbutton = edge_greenbutton.out;
+    
+    
+    whitecond.in = whitebutton; // input raw inverted reset signal
+    edge_whitebutton.in = whitecond.out;   // conditioned reset
+    game_beta.whitebutton = edge_whitebutton.out;
+    
+    usb_tx = usb_rx;        // loop serial port
+    
+    led = 8h00;             // turn LEDs off
+    
+   
+    //   game_beta.slowclk = slowClock.value;
+    
+    
+        
+    green = game_beta.green;
+    red = game_beta.red;
+    
+    
+    
+    p1_seg = ~game_beta.p1_seg;
+    p1_sel = ~game_beta.p1_sel;
+    
+    p2_seg = ~game_beta.p2_seg;
+    p2_sel = ~game_beta.p2_sel;
+    
+    rounds_seg = ~game_beta.rounds_seg;
+    rounds_sel = ~game_beta.rounds_sel;  
+    
+    
+    /*
+    //trial with indexing
+    seg1.values = {4h4, 4h4};
+    p1_seg = ~seg1.seg;
+    p1_sel= ~seg1.sel;
+    
+    seg2.values = {4h5, 4h5};
+    p2_seg = ~seg2.seg;
+    p2_sel = ~seg2.sel;  
+    
+    seg3.values = {4h6, 4h6};
+    rounds_seg = ~seg3.seg;
+    rounds_sel = ~seg3.sel;
+    
+    
+    
+  */
+}

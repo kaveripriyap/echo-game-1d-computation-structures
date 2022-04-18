@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Echo2" board="Alchitry Au" language="Lucid" version="3">
+  <files>
+    <component>decoder.luc</component>
+    <src>addValue.luc</src>
+    <src>game_miniRegfile.luc</src>
+    <src top="true">au_top.luc</src>
+    <src>alu_16.luc</src>
+    <src>arith_16.luc</src>
+    <component>button_conditioner.luc</component>
+    <src>comp_16.luc</src>
+    <src>bool_16.luc</src>
+    <component>pipeline.luc</component>
+    <component>edge_detector.luc</component>
+    <src>shift_16.luc</src>
+    <src>seven_seg.luc</src>
+    <component>counter.luc</component>
+    <src>multi_seven_seg.luc</src>
+    <src>game_miniBeta.luc</src>
+    <src>game_cu.luc</src>
+    <component>reset_conditioner.luc</component>
+    <constraint lib="true">au.xdc</constraint>
+    <constraint>io.acf</constraint>
+    <constraint>alchitry.acf</constraint>
+  </files>
+</project>

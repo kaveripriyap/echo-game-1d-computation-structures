@@ -1,0 +1,116 @@
+module game_miniBeta (
+    input clk,  // clock
+   
+    input rst,  // reset
+    input whitebutton,
+    input greenbutton,
+    input startbutton,
+    
+    
+    
+    output p1_seg[8],
+    output p2_seg[8],
+    output rounds_seg[8],
+    output p1_sel[2],
+    output p2_sel[2],
+    output rounds_sel[2],
+    
+    
+    output green,
+    output red
+    
+  ) {
+  
+  alu_16 game_alu;
+  addValue add_value;
+  
+  sig inputAlu_a[16];
+  sig inputAlu_b[16];
+ 
+  .clk(clk)
+  {
+    .rst(rst)
+    {
+      game_cu control_unit;
+      game_miniRegfile register_file;
+      
+    }
+  }
+
+  always 
+  {
+    // alu
+    
+    
+    
+    
+    control_unit.isP1 = register_file.isP1;
+    control_unit.tempvar1 = register_file.tempvar1;
+    control_unit.tempvar2 = register_file.tempvar2;
+    control_unit.tempvar3 = register_file.tempvar3;
+    control_unit.p1Score = register_file.p1Score;
+    control_unit.p2Score = register_file.p2Score;
+    control_unit.rounds = register_file.rounds;
+    control_unit.winner = register_file.winnerOut;
+    
+    
+    add_value.sequenceCount = register_file.sequenceCount;
+    
+    control_unit.greenbutton = greenbutton;
+    control_unit.whitebutton = whitebutton;
+    control_unit.startbutton = startbutton;
+    
+    
+    register_file.ra = control_unit.ra;
+    register_file.rb = control_unit.rb;
+    register_file.rc = control_unit.rc;
+    register_file.we = control_unit.we;
+    
+    // asel mux
+    case(control_unit.asel){
+      b00  : inputAlu_a = register_file.out_a;
+      b01  : inputAlu_a = add_value.addvalue;
+      default : 
+          inputAlu_a = 16b0;
+    }
+    
+    // bsel mux
+    case(control_unit.bsel){
+      b000 : inputAlu_b = register_file.out_b;
+      b001 : inputAlu_b = 16b0;
+      b010 : inputAlu_b = 16b0000000000000001;
+      b011 : inputAlu_b = 16b0000000000000101;
+      b100 : inputAlu_b = 16b0000000000001111;
+      b101 : inputAlu_b = h000000000000010001;
+      default: 
+          inputAlu_b = 16b0;
+    }
+    
+    // wdsel mux
+    case (control_unit.wdsel){
+      b00 : register_file.data = game_alu.out;
+      b01 : register_file.data = b1111111111111111;
+      b10 : register_file.data = b0000000000001111;
+      b11 : register_file.data = b0000000000000000;
+      default :
+          register_file.data = game_alu.out;
+    }
+    
+    game_alu.x = inputAlu_a;  
+    game_alu.y = inputAlu_b;
+    game_alu.alufn = control_unit.alufn;
+    
+    
+    p1_seg = control_unit.p1_seg;
+    p1_sel = control_unit.p1_sel;
+    p2_seg = control_unit.p2_seg;
+    p2_sel = control_unit.p2_sel;
+    rounds_seg = control_unit.rounds_seg;
+    rounds_sel = control_unit.rounds_sel;
+    
+    green = control_unit.green;
+    red = control_unit.red;
+    
+     
+  }
+}
