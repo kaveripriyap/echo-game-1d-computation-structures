@@ -39,10 +39,6 @@ module game_miniBeta (
 
   always 
   {
-    // alu
-    
-    
-    
     
     control_unit.isP1 = register_file.isP1;
     control_unit.tempvar1 = register_file.tempvar1;
@@ -53,14 +49,14 @@ module game_miniBeta (
     control_unit.rounds = register_file.rounds;
     control_unit.winner = register_file.winnerOut;
     
-    
     add_value.sequenceCount = register_file.sequenceCount;
     
+    // buttons
     control_unit.greenbutton = greenbutton;
     control_unit.whitebutton = whitebutton;
     control_unit.startbutton = startbutton;
     
-    
+    // regfile
     register_file.ra = control_unit.ra;
     register_file.rb = control_unit.rb;
     register_file.rc = control_unit.rc;
@@ -95,12 +91,13 @@ module game_miniBeta (
       default :
           register_file.data = game_alu.out;
     }
-    
+
+    // alu
     game_alu.x = inputAlu_a;  
     game_alu.y = inputAlu_b;
     game_alu.alufn = control_unit.alufn;
     
-    
+    // seg displays
     p1_seg = control_unit.p1_seg;
     p1_sel = control_unit.p1_sel;
     p2_seg = control_unit.p2_seg;
@@ -108,9 +105,9 @@ module game_miniBeta (
     rounds_seg = control_unit.rounds_seg;
     rounds_sel = control_unit.rounds_sel;
     
+    // leds
     green = control_unit.green;
-    red = control_unit.red;
-    
+    red = control_unit.red;   
      
   }
 }

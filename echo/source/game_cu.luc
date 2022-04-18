@@ -2,7 +2,6 @@ module game_cu (
     input clk,  // clock
     input rst,  // reset_conditioner
     
-    
     input greenbutton,
     input whitebutton,
     input startbutton,
@@ -16,14 +15,11 @@ module game_cu (
     input winner,
     
     
-    
-    
-    
-    //just the regular leds
+    // our compare value display leds
     output green,
     output red,
     
-    //the control signals here
+    // the control signals here
     output we,
     output ra[4],
     output rb[4],
@@ -33,7 +29,7 @@ module game_cu (
     output wdsel[2],
     output alufn[6],
     
-    //the segmented displays here
+    // the segmented displays here
     output p1_seg[8],
     output p1_sel[2],
     
@@ -42,8 +38,7 @@ module game_cu (
     
     output rounds_seg[8],
     output rounds_sel[2]    
-    
-    
+      
     
   ) {  
   
@@ -53,7 +48,8 @@ module game_cu (
   
  
   fsm game_fsm = {
-    //INITIALIZATION STATES
+
+    // INITIALIZATION STATES
     IDLE_INIT,
     START,
     SEVENTEEN,
@@ -71,9 +67,9 @@ module game_cu (
     IDLE,
     
       
-    //USER INPUT STATES (LOOPS HERE)        
+    // USER INPUT STATES (LOOPS HERE)        
     
-    //PLAYER 1 SEQUENCES      
+    // PLAYER 1 SEQUENCES      
     PLAYER1_PRESS,
     P1_INIT_LOOPVAR,
     P1_LOOPVAR_COMPARE,
@@ -83,6 +79,7 @@ module game_cu (
     P1_INCREMENT_LOOPVAR,
     P1_WRITE_ADDVALUE,
       
+    // PLAYER 2 SEQUENCES
     PLAYER2_PRESS,
     P2_INIT_LOOPVAR,
     P2_LOOPVAR_COMPARE,
@@ -92,14 +89,12 @@ module game_cu (
     P2_INCREMENT_LOOPVAR,
     P2_WRITE_ADDVALUE,
       
-      
     COMPARE_SEQUENCECOUNT_ONE,
     SEQUENCE_COUNT_INCREMENT,
     COMPARE_SEQUENCECOUNT_ONE_CHECK,
     NOT_ISP1_SEQUENCECOUNT_1,
-    
-    
-      
+
+    // COMPARE SEQUENCES  
     SEVENTEEN_SUBTRACT,  
     COMPARE_SEQUENCES_COPY1, 
     COMPARE_SEQUENCES_SHIFT1,
@@ -109,6 +104,7 @@ module game_cu (
     COMPARE_SEQUENCES_CHECK,
     CHECK_ISP1,
       
+    // UPDATING PLAYER STATUS
     COMPARE_SEQUENCE16,
     COMPARE_SEQUENCE16_CHECK,
     NOT_ISP1_16, 
@@ -116,6 +112,7 @@ module game_cu (
     NOT_ISP1_ROUND,
     INIT_SEQCOUNT_ROUND,
       
+    // UPDATING SCORES
     ROUND_INCREMENT,
     ISP1,
     INCREMENT_P2_SCORE_16,
@@ -124,6 +121,7 @@ module game_cu (
     INCREMENT_P1_SCORE,
     INCREMENT_P2_SCORE,
     
+    // WINNER AND ROUND CHECKS
     COMPARE_ROUND5,
     COMPARE_ROUND5_CHECK,
     COMPARE_SCORES_LEQ,
@@ -131,6 +129,7 @@ module game_cu (
     COMPARE_SCORES_EQ,
     COMPARE_SCORES_EQ_CHECK,
       
+    // WHO WON?
     P1_WINNER,
     TIE,
     P2_WINNER,
@@ -152,7 +151,7 @@ module game_cu (
     
     //********************************************************************************************************
     //********************************************************************************************************
-    //these are the default initializations
+    // these are the default initializations
     alufn = b111111; // CHANGE
     asel = b00;
     bsel = b000;
@@ -181,27 +180,19 @@ module game_cu (
     rounds_sel = seg3.sel;
     
     
- 
-    
     if (rst)
-    {
-       
+    {   
        game_fsm.d = game_fsm.START;
-   }
+    }
+      
+    else {
     
-    
-    else{
-    
-    case(game_fsm.q){
+    case (game_fsm.q) {
     
       game_fsm.IDLE_INIT:
         red = 1b1;
         green = 1b1;
-          
-      
-  
         game_fsm.d = game_fsm.START;
-       
     
       game_fsm.START:      // sets isP1 to 1
         alufn = 6b010100;  // y = 1
@@ -211,8 +202,6 @@ module game_cu (
         we = 1b1;  
         game_fsm.d = game_fsm.SEVENTEEN;
         
-      
-        
       game_fsm.SEVENTEEN:
         alufn = 6b010100;  // y = 17
         asel = 2b00;       // out a
@@ -220,7 +209,6 @@ module game_cu (
         rc = 4b1100;       // writing into seventeen
         we = 1b1;  
         game_fsm.d = game_fsm.P1_INIT_SEQUENCE;
-        
       
       game_fsm.P1_INIT_SEQUENCE:
         alufn = 6b010100;  // y = 0
@@ -376,7 +364,6 @@ module game_cu (
         {
          //red = 1b1;
          //green = 1b0;
-          
           game_fsm.d = game_fsm.P1_BUTTONPRESS;
         }
         
@@ -468,9 +455,9 @@ module game_cu (
       
       game_fsm.P2_SET_ADDVALUE:
         alufn = 6b010011;  // x
-        asel = 2b01;       //add value
-        bsel = 3b000;      //rb
-        rc = 4b1001;       //addvalue
+        asel = 2b01;       // add value
+        bsel = 3b000;      // rb
+        rc = 4b1001;       // addvalue
         we = 1b1;            
         game_fsm.d = game_fsm.P2_WRITE_ADDVALUE;
       
@@ -752,10 +739,7 @@ module game_cu (
         rc = 4b0010;       // writing into sequenceCount
         we = 1b1;  
         game_fsm.d = game_fsm.IDLE;
-        
-        
-          
-        
+      
       game_fsm.COMPARE_SCORES_LEQ:
         alufn = 6b110011; // CMPLEQ
         asel = 2b00;      // out a 
@@ -825,7 +809,7 @@ module game_cu (
         if(winner)
         {
           //green = 1b1;
-         // red = 1b1;
+          // red = 1b1;
           game_fsm.d = game_fsm.START;
         }
         else if(tempvar1)
@@ -840,16 +824,13 @@ module game_cu (
         }
         else 
         {
-         
-            
           game_fsm.d = game_fsm.START;
         }
           
       default: 
         game_fsm.d = game_fsm.START;
            
-    }
-    
+    }   
   }
   }
 }

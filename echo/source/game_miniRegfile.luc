@@ -1,9 +1,9 @@
 module game_miniRegfile (      // regfile has two read ports and one write port
     input clk,                 // clock
     input rst,                 // reset
-    input rc[4],    //write address for port c
+    input rc[4],               // write address for port c
     input we,                  // write enable
-    input data[16],            //data in for port c
+    input data[16],            // data in for port c
     input ra[4],               // address port a 
     input rb[4],               // address port b
     
@@ -51,8 +51,8 @@ module game_miniRegfile (      // regfile has two read ports and one write port
     
     // read port a
     case(ra) {
-        b0000 : out_a = p1_sequence.q;    // stores the player 1 sequence value
-        b0001 : out_a = p2_sequence.q;    // stores the player 2 sequence value
+        b0000 : out_a = p1_sequence.q;      // stores the player 1 sequence value
+        b0001 : out_a = p2_sequence.q;      // stores the player 2 sequence value
         b0010 : out_a = sequence_count.q;   // stores the current button sequence count
         b0011 : out_a = p1_score.q;         // stores player 1's current score
         b0100 : out_a = p2_score.q;         // stores player 2's current score
@@ -73,18 +73,18 @@ module game_miniRegfile (      // regfile has two read ports and one write port
     
     // read port b
     case(rb) {
-        b0000 : out_b = p1_sequence.q;      // stores the player 1 sequence value
-        b0001 : out_b = p2_sequence.q;      // stores the player 2 sequence value
-        b0010 : out_b = sequence_count.q;   // stores the current button sequence count
-        b0011 : out_b = p1_score.q;         // stores player 1's current score
-        b0100 : out_b = p2_score.q;         // stores player 2's current score
-        b0101 : out_b = round.q;            // stores the current round
-        b0110 : out_b = is_p1.q;            // checks if the current player is player 1
-        b0111 : out_b = temp_var1.q;        // temporary
-        b1000 : out_b = temp_var2.q;        // temporary
-        b1001 : out_b = addvalue.q;         // temporary
-        b1010 : out_b = winner.q;            //winner
-        b1011 : out_b = loop_var.q;          // loop for the input sequence 
+        b0000 : out_b = p1_sequence.q;        // stores the player 1 sequence value
+        b0001 : out_b = p2_sequence.q;        // stores the player 2 sequence value
+        b0010 : out_b = sequence_count.q;     // stores the current button sequence count
+        b0011 : out_b = p1_score.q;           // stores player 1's current score
+        b0100 : out_b = p2_score.q;           // stores player 2's current score
+        b0101 : out_b = round.q;              // stores the current round
+        b0110 : out_b = is_p1.q;              // checks if the current player is player 1
+        b0111 : out_b = temp_var1.q;          // temporary
+        b1000 : out_b = temp_var2.q;          // temporary
+        b1001 : out_b = addvalue.q;           // mask value to add
+        b1010 : out_b = winner.q;             // winner
+        b1011 : out_b = loop_var.q;           // loop for the input sequence 
         b1100 : out_b = seventeen.q;          //seventeen
         b1101 : out_b = seventeen_subtract.q;  
         b1110 : out_b = temp_var3.q;
