@@ -1,0 +1,31 @@
+module shift_16 (
+    input x[16],
+    input y[16],
+    input shiftAlufn[2], 
+    output shiftOut[16]
+  ) {
+
+  sig temp[16];
+
+  always {
+    case(shiftAlufn){
+      
+      b00:                            // shift left (SL - unsigned)
+        temp = x << y[3:0];           
+      
+      b01:                            // shift right (SR - unsigned) 
+        temp = x >> y[3:0];
+      
+      b10:                            // shift left (SLA - signed) 
+        temp = $signed(x) <<< y[3:0];
+                                      
+      b11:                            // shift right (SRA - signed) 
+        temp = $signed(x) >>> y[3:0];
+      
+      default:                        
+        temp = 16b0;     
+      }
+    
+    shiftOut = temp; 
+  }
+}

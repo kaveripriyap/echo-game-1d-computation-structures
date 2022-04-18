@@ -1,0 +1,57 @@
+module debouncer (
+    input clk,  // clock
+    input rst,  // reset
+    input io_button[5],
+    
+    output out[2]
+) 
+{
+  .clk(clk), .rst(rst){
+    dff debouncer_clk[26](#INIT(26b0)); //clock that is slower than default clock, est interval 1 secs
+    dff start (#INIT(0));
+    dff output_to_write[2] (#INIT(b00));
+      
+  }
+  
+  sig up;
+  sig right;
+  sig down;
+  sig middle;
+  
+  always {
+    up = io_button[0];
+    middle = io_button[1];
+    down = io_button[2];
+    right = io_button[4];
+    
+    out = b00;
+    if(!start.q){
+      if(up){
+        start.d = 1;
+        output_to_write.d = b01;
+      }
+      else if(down){
+        start.d = 1;
+        output_to_write.d = b10;
+      }
+      else if(middle){
+        start.d = 1;
+        output_to_write.d = b11;
+      }
+      else if(right){
+        start.d = 1;
+        output_to_write.d = b00;
+      }
+    }
+    else{
+      if(debouncer_clk.q == 15000000){ //send out the button input every 15,000,000 cycles.
+        out = output_to_write.q;  //transfer output to write to output
+        output_to_write.d = b00; //reset back to 0
+        start.d = 0;
+        debouncer_clk.d = 26b0;
+      } else{
+        debouncer_clk.d = debouncer_clk.q + 1;
+    }
+  }
+}
+}

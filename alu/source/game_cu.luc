@@ -1,0 +1,440 @@
+module game_CU ( // game control unit
+    input clk,  // clock
+    input rst,  // reset
+  //  input st,   // slow timer ignored for now but needs to be implemented
+    
+    input rbData[16],
+    output we,
+    output ra[4],
+    output rb[4],
+    output rc[4],
+    output asel[3],
+    output bsel[2],
+    output wdsel[2],
+    output alufn[6],
+    output led[9],
+    output match_led
+    output io_seg [8],
+  ) {
+  
+  .clk(clk){
+  
+  dff timer[16];
+  fsm game_fsm={
+    START,
+    IDLE,
+    PLAYER1_PRESS,
+    PLAYER2_PRESS,
+    INCREMENT_SEQUENCECOUNT,
+    CPMLEQ_SEQUENCECOUNT_1, 
+    NOT_ISP1,
+    CMPEQ_P1SEQUENCE_P2SEQUENCE,
+    UPDATE_LED_GREEN,
+    UPDATE_LED_RED,
+    TURN_LED_OFF,
+    CPMLE_SEQUENCECOUNT_16,
+    CMPEQ_ISP1_0,
+    INCREMENT_P1_SCORE,
+    INCREMENT_P1_SCORE_CMP,
+    INCREMENT_P2_SCORE_CMP,
+    INCREMENT_P2_SCORE,
+    INCREMENT_ROUND,
+    CMPLEQC_ROUND_5,
+    RESET_SEQUENCE_COUNT,
+    CPMLEQ_P1_SCORE_P2SCORE,
+    P1_WINNER,
+    P2_WINNER,
+    DRAW,
+    SET_ISP1_1,
+    END
+        
+  };
+  }
+  always {
+  
+    //initial values for all the components in the beta, it is changed according to the FSM
+    alufn = b111111; //CHANGE
+    asel = b000;
+    bsel = b00;
+    we = b0000;
+    ra = b0000;
+    rb = b0000;
+    rc = b0000;
+    wdsel = b0;
+    led = b000000000;
+    match_led = b0; 
+   // timer.d = 0; //initial value input into the timer, can be changed later
+   // if (rst){
+      // default values assigned above are left as it is,
+    //}
+    //else{
+      case(game_fsm.q){
+            
+        game_fsm.START: // control unit starts here 
+          alufn = b0100; // alufn for  "Y" - passes value of 1 
+          bsel = b010; // SEXT(1)
+
+          rc =  b0110; // writes 1 to isP1 register  
+          we =1;
+
+          game_fsm.d = game_fsm.CLEAR;
+
+
+          
+        game_fsm.IDLE: // CHECK ISP1=1
+          alufn = b0011; // alufn for 'X'
+          asel = b00; 
+
+          ra = b0110; // isP1 register
+          rc = b1101; //store value in temp register 1
+
+          we=1;
+
+          if (rc.q==1) {                               // checks value of isP1 stored in rc
+            game_fsm.d = game_fsm.PLAYER1_PRESS;
+          }
+          else{
+            game_fsm.d = game_fsm.PLAYER2_PRESS;
+          }
+          
+          
+        game_fsm.PLAYER1_PRESS: //loops till player  1 presses button the number of times speciified in sequence count
+          //for loop to store p1_sequence
+          game_fsm.d = game_fsm.INCREMENT_SEQUENCECOUNT;
+
+            
+        game_fsm.PLAYER2_PRESS: //  //loops till player  1 presses button the number of times speciified in sequence count
+          //for loop to store p1_sequence
+          game_fsm.d = game_fsm.INCREMENT_SEQUENCECOUNT;
+
+
+        game_fsm.INCREMENT_SEQUENCECOUNT: // incrementing sequence count after a press
+          alufn = 6b000000; //ADDC
+          asel = b00 ; // register of sequence count 
+          bsel = b010 ; //SEXT(1)
+
+          ra = b0010; // register that stores sequence count 
+          rc = b0010;  // add 1 to sequence count and write to same register
+          we = 1;  
+
+          game_fsm.d = game_fsm.CPMLEQ_SEQUENCECOUNT_1;
+
+                
+
+          
+        game_fsm.CPMLEQ_SEQUENCECOUNT_1: // checks if sequence count is less than or equal to 1 
+          alufn = b011010; //COMPLEQ
+          asel = b00; // passes register ra value
+          bsel = b010; // passes SEXT(1)
+
+          ra= b0010; // sequence count register
+          rc= b1101 ; // temp register 1
+          we = b1;
+        
+          
+          if (rc.q == 1) {
+            game_fsm.d = game_fsm.NOT_ISP1;
+          }
+          else{
+            game_fsm.d = game_fsm.CMPEQ_P1SEQUENCE_P2SEQUENCE;
+          }
+
+
+          ]
+          
+        
+        game_fsm.NOT_ISP1: // CONVERTS P1 TO  0 if P1 is 1
+          alufn = b1011 ; // NOT_ISP1
+          asel = b00; //pass register ra value
+          ra = b0110 ; // isP1 register
+          
+          rc=  b0110;// store result in isP1
+          we = 1;
+          
+          game_fsm.d = game_fsm.IDLE;
+                 
+
+        game_fsm.CMPEQ_P1SEQUENCE_P2SEQUENCE: //  compares sequences of the two players to see if they are equal
+          alufn =  b110010 ; //COMPEQ
+          asel = b00; //passes ra register
+          bsel = b000; //passes rb register
+
+          ra= b0000;
+          rb = b0001; 
+          rc =  b1110; // store result in temp register 2
+          we = 1;
+
+          if(rc.q == 1)
+            game_fsm.d = game_fsm.UPDATE_LED_GREEN;
+          else
+            game_fsm.d = game_fsm.UPDATE_LED_RED;
+
+          
+        game_fsm.UPDATE_LED_GREEN: // Led turns green if sequence is equal
+          //  ADD STATEMENTS FOR LED
+          game_fsm.d = CPMLEQ_SEQUENCECOUNT_16;
+          game_fsm.d = game_fsm.CPMLE_SEQUENCECOUNT_16;
+          
+        game_fsm.UPDATE_LED_RED: //Led turns Red if sequence is wrong
+          // ADD STATEMENTS FOR LED
+          game_fsm.d = game_fsm.GET_SEQ_STORE;
+          game_fsm.d = game_fsm.CMPEQ_ISP1_0;
+
+          
+        game_fsm.CPMLE_SEQUENCECOUNT_16: // to check if sequence count is less than 16 
+          alufn =  b110110; //COMPLE
+          asel = b00; //passes ra register
+          bsel = b100; // passes SEXT(16)
+          ra=  b0010; 
+          
+          rc=  b1110; // store in temp register 2
+          we= 1;
+          if (rc.q == b1){
+            game_fsm.d = game_fsm.NOT_ISP1_CMP;
+
+          }
+          else{
+
+            game_fsm.d = game_fsm.INCREMENT_P1_SCORE;
+          }
+          
+
+          
+        game_fsm.NOT_ISP1_CMP: // similar to NOT_ISP1 state 
+          alufn = b1011 ; // NOT_ISP1
+          asel = b00; //pass register ra value
+          ra = b0110 ; // isP1 register
+          
+          rc=  b0110;// store result in isP1
+          we = 1;
+          
+          game_fsm.d = game_fsm.TURN_LED_OFF;          
+            
+
+        game_fsm.TURN_LED_OFF: //  
+          game_fsm.d = game_fsm.IDLE;
+          
+        
+        game_ fsm.INCREMENT_P1_SCORE: //increments P1 score
+          alufn =  6b000000 //ADDC
+          asel = b00; //passes register ra 
+          bsel = b010; //SEXT(1)
+          ra= b0011 //p1score register
+                 
+          rc = b0011; //write to p1score register   
+          we = b1;
+
+          
+          game_fsm.d = game_fsm.INCREMENT_P2_SCORE;
+
+
+        game_ fsm.INCREMENT_P2_SCORE: //increments P1 score
+          alufn =  6b000000 //ADDC
+          asel = b00; //passes register ra 
+          bsel = b010; //SEXT(1)
+          ra= b0100 ; //p2score register
+                 
+          rc = b0100; //write to p2score register   
+          we = 1;
+
+          
+          game_fsm.d = game_fsm.INCREMENT_ROUND;
+
+
+        game_fsm.CMPEQ_ISP1_0:   //comparing isP1 0 
+          alufn = 6b110010; // COMPEQ
+          asel = b00;  //passing ra register
+          bsel=  b001; //passing SEXT(0)
+          ra = b0110 ; 
+         
+          rc = b1101; //store to temp register 1 
+          we =1;
+          if(rc.q == 1){
+            game_fsm.d = game_fsm.INCREMENT_P1_SCORE_CMP;
+          }
+          else {
+            game_fsm.d = game_fsm.INCREMENT_P2_SCORE_CMP;
+
+          }
+
+
+
+        game_ fsm.INCREMENT_P1_SCORE_CMP: //increments P1 score
+          alufn =  6b000000 //ADDC
+          asel = b00; //passes register ra 
+          bsel = b010; //SEXT(1)
+          ra= b0011 //p1score register
+                 
+          rc = b0011; //write to p1score register   
+          we = b1;
+
+          
+          game_fsm.d = game_fsm.INCREMENT_ROUND;
+
+
+        game_ fsm.INCREMENT_P2_SCORE_CMP: //increments P1 score
+          alufn =  6b000000 //ADDC
+          asel = b00; //passes register ra 
+          bsel = b010; //SEXT(1)
+          ra= b0100 ; //p2score register
+                 
+          rc = b0100; //write to p2score register   
+          we = 1;
+
+          
+          game_fsm.d = game_fsm.INCREMENT_ROUND;
+
+        game_fsm.INCREMENT_ROUND: //incrementing round
+          alufn = 6b000000 ; //ADDC
+          asel = b00 ; //register ra
+          bsel = b010 ; //SEXT(1)
+
+          ra= b0101 ;
+          rc= 0101; 
+
+          we=1
+          game_fsm.d = game_fsm.CMPLEQC_ROUND_5;
+
+//---------------------------------------------------------------------------------------------------------------------------------------
+
+        game_fsm.GET_RANDOM_PAT: // this state stores random pattern in the temporary register
+          rb = hA; //sequence count
+          ra = rbData[3:0];
+          rc = hD;      //temp to store pattern
+          we = b1;
+          alufn = b011010;    //A
+          game_fsm.d = game_fsm.GET_INPUT_BUT;
+                    
+        game_fsm.GET_INPUT_BUT: // this state stores users input in another register
+          asel = b100; // A = button input
+          alufn = b011010;
+          rc = hE;
+          we = b1;
+          game_fsm.d = game_fsm.CMP_INPUT_PAT;
+
+        game_fsm.CMP_INPUT_PAT: //this state compares random pattern and user input and stores it in the third temporary register 
+         // asel = b100;  //button input
+          ra = hE;
+          rb = hD;      //temp storing pattern
+          rc = hF;      //new temp to store compare value
+          we = b1;
+        //  led = rbData[8:0];
+          alufn = b110011;    //CMPEQ
+          game_fsm.d = game_fsm.READ_INPUT_PAT_CMP;
+          
+        
+        game_fsm.READ_INPUT_PAT_CMP: //this state checks whether the input is right or wrong, it loops through the states if wrong, other displays check led
+          rb = hF; //should have been hF but that doesnt work
+          if(rbData == 16h0001)
+            game_fsm.d = game_fsm.DISPLAY_CHECK_LED;
+          else 
+            game_fsm.d = game_fsm.DECR_TIMER_FOR_INPUT;
+
+        game_fsm.DECR_TIMER_FOR_INPUT: //decrements the timer register value
+          ra = hC; //timer store
+          rc = hC; //timer store
+          we = b1;
+          alufn = b001110;    //decrement
+          game_fsm.d = game_fsm.CMP_TIMER_FOR_INPUT;
+
+        game_fsm.CMP_TIMER_FOR_INPUT: //if the timer register is equal to 0 (has completed 38 clock cycles)
+          ra = hC;
+          bsel = b01;
+          rc = hF;
+          we = b1;
+          alufn = b110011;    //CMPEQ
+          game_fsm.d = game_fsm.READ_TIMER_INPUT_2;
+
+        game_fsm.READ_TIMER_INPUT_2: //checks whether timer register is equal to 0, if it is, proceed to lose state otherwise get the input of the button again and loop through the states
+          rb = hF; 
+          if(rbData==16h0001)
+            game_fsm.d = game_fsm.LOSE;
+          else 
+            game_fsm.d = game_fsm.GET_INPUT_BUT;
+            
+        //Joshua 
+            
+       game_fsm.DISPLAY_CHECK_LED: // displays check led to indicate that the user input is correct, stays in the state until timer is equal to b110000
+          match_led = b1;
+          if(timer.q==b1100000){
+            game_fsm.d = game_fsm.INCR_SEQCOUNT_2;
+          }
+          else{
+            game_fsm.d = game_fsm.DISPLAY_CHECK_LED;
+            timer.d = timer.q + b1;
+          }
+          
+        game_fsm.INCR_SEQCOUNT_2: // incrememnts sequence count value
+          ra = hA;
+          rc = hA;
+          we = b1;
+          alufn = b000100; //increment 
+          game_fsm.d = game_fsm.CMP_SEQCOUNT_LVLCOUNT_2;
+          
+        game_fsm.CMP_SEQCOUNT_LVLCOUNT_2: //compares sequence count register with level register
+          ra = hA;
+          rb = h9;
+          rc = hF;
+          we = b1;
+          alufn = b110011;
+          game_fsm.d = game_fsm.READ_SEQ_LVL_CMP_2;
+          
+        game_fsm.READ_SEQ_LVL_CMP_2: //if its equal, it proceeds to the next level, otherwise goes to the next pattern 
+          rb = hF;
+          if(rbData==16h0001)
+            game_fsm.d = game_fsm.CMP_LVLCOUNT_FINAL;
+          else
+            game_fsm.d = game_fsm.SET_TIMER_FOR_INPUT; 
+          
+        game_fsm.CMP_LVLCOUNT_FINAL: // compares whether user has completed level 9,
+          ra = h9;
+          rc = hF;
+          bsel = b11;
+          we = b1;
+          alufn = b110011;      
+         game_fsm.d = game_fsm.READ_CMP_LVL_COUNT; 
+          
+        game_fsm.LOSE: //this state stores the lose value in temporary register which is displayed later
+          rc = hF;
+          we = b1;
+          wdsel = b10; //stores the lose led display sequence      
+          game_fsm.d = game_fsm.DISPLAY;
+          
+       //liwen
+        game_fsm.READ_CMP_LVL_COUNT: // if user has completed level 9, he will encounter the win scenario otherwise he will incrememnt the level and play the next level
+          rb = hF;
+          if(rbData==16h0001)
+            game_fsm.d = game_fsm.WIN;
+          else
+            game_fsm.d = game_fsm.INCR_LVL_COUNT;  
+             
+        game_fsm.INCR_LVL_COUNT: //increments level count value
+          ra = h9;
+          rc = h9;
+          we = b1;
+          alufn = b000100;        
+          game_fsm.d = game_fsm.LVL_INDICATOR;
+          
+        game_fsm.WIN: //this state stores the win value in temporary register which is displayed later
+          wdsel = b01; //stores the win led display sequnce
+          rc = hF;
+          we = b1;    
+          game_fsm.d = game_fsm.DISPLAY;
+          
+        game_fsm.DISPLAY: //this displays the sequence stores in the temporary register (either win or lose) until the timer value is equal to bb1100000
+          rb = hF;
+          led[8:0] = rbData[8:0];
+          if(timer.q==b11000000){
+            game_fsm.d = game_fsm.START;
+          }
+          else{
+            game_fsm.d = game_fsm.DISPLAY;
+            timer.d = timer.q + b1;
+          }
+          
+        default: //default value assigns the state to START of the game
+          game_fsm.d = game_fsm.START;
+          
+      }
+  
+}

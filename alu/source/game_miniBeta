@@ -1,0 +1,85 @@
+module game_miniBeta (
+    input btn[9],
+    input clk,  // clock
+    input rst,  // reset
+    output led[9],
+    output seven_seg_1[4],
+    output seven_seg_2[4],
+    output seven_seg_3[4],
+    output check_led
+  ) {
+  
+
+  // fauziii 
+
+  // temp variables for A and B values to be inputted in the ALU
+  sig inputAlu_a[16];
+  sig inputAlu_b[16];
+  
+  alu_16 game_alu; // alu module of the game, our games uses boole, comparator, increment and decrement modules
+
+  .clk(clk){
+    .rst(rst){
+      counter slow_timer(#SIZE(1),#DIV(20)); 
+    }
+  }
+  .clk(slow_timer.value){
+    .rst(rst){
+      game_cu game_controlunit; // control unit module of the game
+      game_miniRegfile regfile; // regfile module of the game
+    }
+  }
+  
+  always {
+    
+    // setup REGFILE unit 
+    regfile.we = game_controlunit.we;
+    regfile.write_address = game_controlunit.rc;
+    regfile.read_address_a = game_controlunit.ra;
+    regfile.read_address_b = game_controlunit.rb;
+    
+    game_controlunit.rbData = regfile.out_b;
+    
+    // asel mux
+    case(game_controlunit.asel){
+      b00  : inputAlu_a = regfile.out_a;
+      b01  : inputAlu_a[1:0] = btn; 
+              inputAlu_a[15:2] = b00000000000000;
+      default : 
+          inputAlu_a = h0000;
+    }
+    
+    // bsel mux
+    case(game_controlunit.bsel){
+      b000 : inputAlu_b = regfile.out_b;
+      b001 : inputAlu_b = h0000;
+      b010 : inputAlu_b = h0001;
+      b011 : inputAlu_b = h0005;
+      b100 : inputAlu_b = h000F;
+      default: 
+          inputAlu_b = h0000;
+      
+    }
+    
+    // ALU
+    game_alu.x = inputAlu_a;
+    game_alu.y = inputAlu_b;
+    game_alu.alufn = game_controlunit.alufn;
+   
+    
+    // wdsel mux
+    case (game_controlunit.wdsel){
+      b00 : regfile.data = game_alu.out;
+      b01 : regfile.data = b1111111111111111;
+      b10 : regfile.data = b0000000000001111;
+      b11 : regfile.data = b0000000000000000;
+      default :
+          regfile.data = game_alu.out;
+    }
+    
+    // output to the au_top
+    led = game_controlunit.led;
+    check_led = game_controlunit.match_led;
+    
+  }
+}
