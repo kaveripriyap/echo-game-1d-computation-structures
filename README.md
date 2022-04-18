@@ -66,31 +66,31 @@ There can also be a special scenario when a draw is declared. This happens if bo
 
 ### Regfile
 
-p1seq- Player 1's sequence input
-p2seq- Player 2's sequence input
-sequenceCount- to keep track of the length of the sequence in that iteration
-p1Score- Keeps track player 1's score
-p2Score- Keeps track player 2's score
-round- total number of rounds played
-isP1- which player is currently inputting the sequence
-tempvar1 and tempvar2- for storing arbitrary values
-tempvar3- helps check if the led should turn on or not
-addvalue- helps with adding a value of 1 to the sequence if 1 is inputted
-winner- to store the value 1 if its a tie
-loopvar- in every iteration, we check if loopvar is lesser than sequence count
-seventeen- helps in masking 1 value
-seventeen_subtract- for storing the value subtracted from seventeen
+* p1seq - Player 1's sequence input
+* p2seq - Player 2's sequence input
+* sequenceCount - to keep track of the length of the sequence in that iteration
+* p1Score - Keeps track player 1's score
+* p2Score - Keeps track player 2's score
+* round - total number of rounds played
+* isP1 - which player is currently inputting the sequence
+* tempvar1 and tempvar2 - for storing arbitrary values
+* tempvar3 - helps check if the led should turn on or not
+* addvalue - helps with adding a value of 1 to the sequence if 1 is inputted
+* winner - to store the value 1 if its a tie
+* loopvar - in every iteration, we check if loopvar is lesser than sequence count
+* seventeen - helps in masking 1 value
+* seventeen_subtract - for storing the value subtracted from seventeen
 
 ### ASEL mux inputs
 
-- out_a
-- addvalue
+* out_a
+* addvalue
 
 ### BSEL mux inputs
 
-- out_b
-- 0
-- 1
-- 5
-- 16
-- 17
+* out_b
+* 0
+* 1
+* 5
+* 16
+* 17
