@@ -1,0 +1,36 @@
+module seven_seg (
+    input char[8], 
+    output segs[8]
+  ) {
+
+  always {
+    case (char) {
+      0: 
+        segs = 8b00010010; 
+      1: 
+        segs = 8b10111110; //1
+      2: 
+        segs = 8b00100011;
+      3: 
+        segs = 8b00100110;
+      4: 
+        segs = 8b10001110;
+      5: 
+        segs = 8b01000110; 
+      6: 
+        segs = 8b01000010;
+      7: 
+        segs = 8b00111110;// this is both 7 and "left T"
+      8: 
+        segs = 8b00000010; // "B" or 8
+      9: 
+        segs = 8b00000110; // h9
+      13: 
+        segs = 8b00001011; // "P", 1hd
+      14: 
+        segs = 8b01011011; // "right T", 1he
+      default: 
+        segs = 8b00000010; // empty display
+    }
+  }
+}

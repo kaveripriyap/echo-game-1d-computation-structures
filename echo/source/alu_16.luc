@@ -1,0 +1,61 @@
+module alu_16 (
+    input x[16],
+    input y[16],
+    input alufn[6],    
+
+    output out[16],
+    output z,
+    output v,
+    output n
+  ) {
+  
+  arith_16 arith; 
+  arith_16 arithForComp; 
+  bool_16 bool; 
+  shift_16 shift; 
+  comp_16 comp;
+  
+  always {
+    arith.x = x;
+    arith.y = y;
+    arith.arithAlufn = alufn[1:0]; 
+    z = arith.z; 
+    v = arith.v;
+    n = arith.n;
+    
+    arithForComp.x = x;
+    arithForComp.y = y;
+    arithForComp.arithAlufn = b01; 
+    
+    comp.z = arithForComp.z;
+    comp.v = arithForComp.v;
+    comp.n = arithForComp.n;
+    comp.compAlufn = alufn[2:1];
+    
+    bool.x = x;
+    bool.y = y;
+    bool.boolAlufn = alufn[3:0];
+    
+    shift.x = x;
+    shift.y = y;
+    shift.shiftAlufn = alufn[1:0];
+    
+    case(alufn[5:4]){
+      
+      b00:                             // for adder
+        out = arith.arithOut;
+        
+      b01:                             // for bool
+        out = bool.boolOut;
+        
+      b10:                             // for shifter
+        out = shift.shiftOut;
+        
+      b11:                             // for comparator
+        out = comp.compOut;
+
+      default:                         // hopefully this never happens
+        out = 16b0;  
+    }
+  }
+}

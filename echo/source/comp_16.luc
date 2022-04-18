@@ -1,0 +1,31 @@
+module comp_16 (
+    input z,
+    input v,
+    input n,
+    input compAlufn[2], 
+
+    output compOut[16]
+  ) {
+
+  sig temp;
+  
+  always {
+    case(compAlufn){
+
+      b01:                        // equal to (a = b)
+        temp = z;
+        
+      b10:                        // less than (a < b)
+        temp = n ^ v;
+        
+      b11:                        // less than equal to (a <= b)
+        temp = (n ^ v) | z;
+        
+      default:                
+        temp = 0;
+    }
+    
+    compOut[15:1] = 15b0;        
+    compOut[0] = temp;
+    
+}
