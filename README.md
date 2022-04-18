@@ -51,5 +51,26 @@ There can also be a special scenario when a draw is declared. This happens if bo
 
 <img width="11904" alt="FSM + Datapath (2)" src="https://user-images.githubusercontent.com/77422453/163808899-781f81d5-65da-46d7-86cd-c979f8edb012.png">
 
+### Beta 
+* Inputs to miniBeta : 
+  * clk
+  * rst
+  * whitebutton
+  * greenbutton 
+  * startbutton
+    
+* Outputs from miniBeta:
+  * p1_seg[8],
+  * p2_seg[8],
+  * rounds_seg[8],
+  * p1_sel[2],
+  * p2_sel[2],
+  * rounds_sel[2],    
+  * green
+  * red
+
+* miniBeta also contains the code for the asel, bsel and wdsel mux. 
+
+
 
 
