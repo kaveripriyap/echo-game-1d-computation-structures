@@ -36,14 +36,6 @@ If let's say the players keep playing their sequences till 16 becomes the length
 ### Draw scenario
 There can also be a special scenario when a draw is declared. This happens if both the players together have the same score at the end of 5 rounds. This can occur when there has been a draw in any of the rounds. 
 
-### Data Path
-
-![image](https://user-images.githubusercontent.com/77422453/163808712-261bdf94-3985-4d3b-af02-256315bf4a77.png)
-
-### FSM Diagram
-
-<img width="11904" alt="FSM + Datapath (2)" src="https://user-images.githubusercontent.com/77422453/163808899-781f81d5-65da-46d7-86cd-c979f8edb012.png">
-
 ### Beta 
 * Inputs to miniBeta: 
   * clk
@@ -94,3 +86,13 @@ There can also be a special scenario when a draw is declared. This happens if bo
 * 5
 * 16
 * 17
+
+### Data Path
+
+![image](https://user-images.githubusercontent.com/77422453/163808712-261bdf94-3985-4d3b-af02-256315bf4a77.png)
+
+### FSM Diagram
+
+Link to our FSM: https://www.figma.com/file/8AWcf5Rm05OhFewBP98LVh/FSM-%2B-Datapath?node-id=0%3A1
+
+<img width="11904" alt="FSM + Datapath (2)" src="https://user-images.githubusercontent.com/77422453/163808899-781f81d5-65da-46d7-86cd-c979f8edb012.png">
